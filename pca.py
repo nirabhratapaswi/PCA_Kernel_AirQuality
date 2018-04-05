@@ -29,10 +29,21 @@ for i in range(1, 11):
 	# X = pca.fit_transform(data)
 	X = ipca.fit_transform(data)
 
+<<<<<<< HEAD
 	gScore = 0.0
 	print("\nDIMENSION ", i)
 	shuffled_data = shuffle.shuffle(X, popped_array["AH"], 10, 0.33)
 	for  j in range(0, len(shuffled_data["X"]["train"])):
+=======
+	print("Shuffling & splitting data...")
+	shuffled_data = shuffle.shuffle(X, popped_array["RH"], 10, 0.33)
+	# X_train, X_test, y_train, y_test = train_test_split(X, popped_array["T"], test_size=0.2, random_state=42)
+	for  j in range(0, len(shuffled_data["X"]["train"])):
+		# X_train = preprocessing.scale(X_train)
+		# X_test = preprocessing.scale(X_test)
+		# y_train = preprocessing.scale(y_train)
+		# y_test = preprocessing.scale(y_test)
+>>>>>>> 6f6237ef82140223e534b2a0fa69a820a7bf0093
 		X_train = preprocessing.scale(shuffled_data["X"]["train"][j])
 		X_test = preprocessing.scale(shuffled_data["X"]["test"][j])
 		y_train = preprocessing.scale(shuffled_data["y"]["train"][j])

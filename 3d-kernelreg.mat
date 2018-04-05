@@ -1,0 +1,129 @@
+% ======== run3DExample ======== 
+% This script performs Gaussian Kernel Regression on a generated 
+% three-dimensional dataset.
+
+% $Author: ChrisMcCormick $    $Date: 2014/02/25 22:00:00 $    $Revision: 1.0 $
+clear;
+close all;
+clc;
+
+% ==================================
+%       Generate the Sombrero
+% ==================================
+
+printf("Generating sombrero function...\n");
+fflush(stdout);
+
+% Evaluate the sombrero from -10 to 10 in both dimensions.
+% I'm creating a 2D grid of input points, then unwinding this into
+% a list of 2D coordinate pairs. There is probably a more elegant
+% method for arriving at this result; please leave a comment if you
+% know it :).
+
+% Define the range as a row vector.
+x = [-10:0.2:10];
+
+% Create a 2D grid holding the x1 values at every point for the grid.
+% Every *row* of this matrix will be identical.
+X1 = ones(length(x), length(x));
+for (i = 1 : length(x))
+    X1(i, :) = x;
+end
+
+% Create a 2D grid holding the x2 values at every point for the grid.
+% Every *column* of this matrix will be identical.
+X2 = ones(length(x), length(x));
+for (i = 1 : length(x))
+    X2(:, i) = x';
+end
+
+% Unwind the two grids into a single list of 2D coordinates.
+X = [X1(:) X2(:)];
+
+% Evaluate the sombrero function over every input coordinate.
+A = sqrt(X(:, 1).^2 + X(:, 2).^2);
+Z_orig = sin(A) ./ A;
+
+% The sombrero function evaluates to NaN at (0, 0), but the correct
+% value is 1.
+Z_orig(isnan(Z_orig)) = 1;
+
+% Plot the sombrero function using the 'surf' function.
+% In order to plot the Z values, we need to reshape the vector
+% back into a 2D matrix.
+figure(1);
+surf(x, x, reshape(Z_orig, length(x), length(x)));
+title('Original Function');
+axis([-10 10 -10 10 -.5 1.0]);
+
+% ==================================
+%       Add Random Noise
+% ==================================
+
+% Add random noise to the data.
+Z = Z_orig + (0.1 * randn(size(Z_orig)));
+
+% Plot the noisy sombrero using the 'surf' function.
+figure(2);
+surf(x, x, reshape(Z, length(x), length(x)));
+title('Noisy Data');
+axis([-10 10 -10 10 -.5 1.0]);
+
+% ===================================
+%      Approximate the Function
+% ===================================
+
+printf("Running Gaussian Kernel Regression over noisy data...\n");
+fflush(stdout);
+
+% Approximate the function over the same grid that we used
+% to generate the data.
+Xs = X;
+Zs = zeros(size(X, 1), 1);
+
+% Set the width of the Gaussian.
+% Smaller values will fit the data points more tightly, while larger
+% values will create a smoother result.
+sigma = 0.8;
+
+% Pre-compute the beta coefficient to use inside the exponent.
+beta = 1 / (2 * sigma^2);
+
+% For every query point...
+for (i = 1 : size(Xs, 1))
+
+	% Print a progress update every 1,000 points.
+    if (mod(i, 1000) == 0)
+        printf(" (%d / %d) %.0f%%...\n", i, size(Xs, 1), i / size(Xs, 1) * 100.0);
+        fflush(stdout);
+    end
+
+	% Get the next query point.
+    input = Xs(i, :);
+
+    % Subtract each component of the input from every training example.
+	% 'diffs' is a matrix with the same dimensions as X.
+    diffs = bsxfun(@minus, X, input);
+    
+    % Compute the sum of squared differences. This gives you the squared 
+    % Euclidean distance between the input and every example.
+	% 'dists' is a column vector with one row per data point.
+    dists = sum(diffs.^2, 2);
+    
+    % Evaluate the exponential to get the weight for every training example.
+    w = exp(-beta * dists);
+
+    % Compute the sum of weighted training values, and normalize it by the 
+    % sum of the weights.
+    Zs(i) = sum(w .* Z) / sum(w);
+end
+
+% Plot the approximated result.
+figure(3);
+hold off;
+surf(x, x, reshape(Zs, length(x), length(x)));
+title('Approximated Function');
+axis([-10 10 -10 10 -.5 1.0])
+
+printf("Done.\n");
+fflush(stdout);

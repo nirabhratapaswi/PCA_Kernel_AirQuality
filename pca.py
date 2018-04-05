@@ -43,7 +43,7 @@ for i in range(1, 13):
 		y_train = preprocessing.scale(shuffled_data["y"]["train"][j])
 		y_test = preprocessing.scale(shuffled_data["y"]["test"][j])
 		print("Fitting data for ", i, "th dimensional PCA -- shuffle: ", j, " for target: ", regression_y, "...")
-		knn = KNeighborsRegressor(n_neighbors=i)
+		knn = KNeighborsRegressor(n_neighbors=i, weights='distance', algorithm='auto', leaf_size=30, p=2, metric='minkowski')
 		knn.fit(X_train, y_train)
 		print(knn.score(X_test, y_test))
 		score = knn.score(X_test, y_test)

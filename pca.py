@@ -22,6 +22,20 @@ popped_array = {}
 for x in pop_array:
 	popped_array[x] = pd.DataFrame(data.pop(x))
 
+def find_nearest(array, value):
+	item = array[0]
+	closest = abs(array[0]-value)
+	index = 0
+	counter = 0
+	for x in array:
+		counter += 1
+		new_closest = min(abs(x-value), closest)
+		if new_closest < closest:
+			closest = new_closest
+			index = counter
+
+	return index
+
 plt.xlabel("components")
 plt.ylabel("accuracy")
 scores = []
@@ -54,7 +68,7 @@ for i in range(1, 13):
 	scores.append(gScore)
 	print("->Average score for dim ",i, ": ", gScore)
 	
-
+print("Optimum dimension: ", find_nearest(scores, 0.85*max(scores)))
 plt.plot(dims, scores, 'b-')
 plt.ylabel("accuracy")
 plt.xlabel("components")

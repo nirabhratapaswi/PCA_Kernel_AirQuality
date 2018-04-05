@@ -1,13 +1,13 @@
 from sklearn.model_selection import ShuffleSplit
 import pandas as pd
 
-def shuffle(X, y, n_splits=3, test_size=0.25):
+def shuffle(X, y, n_splits_passed=2, test_size_passed=0.25):
 	X = list(X)				# convert ndarray to list
 	y = y.values.tolist()	# convert pandas dataframes to values to list
 	# print(len(X), len(y))
 	shuffled_X = {"test": [], "train": []}
 	shuffled_y = {"test": [], "train": []}
-	rs = ShuffleSplit(n_splits=n_splits, test_size=test_size, random_state=0)
+	rs = ShuffleSplit(n_splits=n_splits_passed, test_size=test_size_passed, random_state=0)
 	rs.get_n_splits(X)
 	for train, test in rs.split(X):
 		temp_x = []

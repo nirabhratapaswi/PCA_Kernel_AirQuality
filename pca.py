@@ -13,6 +13,7 @@ import numpy as np
 from sklearn.neighbors import KNeighborsRegressor
 import sys
 import time
+import bias_variance as bv
 
 regression_y = "T"
 if len(sys.argv) > 1:
@@ -48,12 +49,11 @@ dims = []
 # plot_1_3d = plot_1.add_subplot(111, projection='3d')
 # plot_1_3d = Axes3D(plot_1)
 
-for i in range(1, 10):
-
+for i in range(2, 4):
 	print("Dimension ", i)
 	ipca = IncrementalPCA(n_components=i, batch_size=100)
 	X = ipca.fit_transform(data)
-	print("Transformed data X shape: ", np.shape(X), ", y shape: ", np.shape(popped_array[regression_y]))
+	# print("Transformed data X shape: ", np.shape(X), ", y shape: ", np.shape(popped_array[regression_y]))
 	# plot_1.xlabel("X1")
 	# plot_1.ylabel("X2")
 	# plot_1_3d.set_xlabel("X1")
@@ -65,8 +65,8 @@ for i in range(1, 10):
 	# plot_1.plot(X[:, 1], X[:, 1], 'r.')
 	# plot_1_3d.scatter(X[:, 1], X[:, 1], X[:, 2], '.')
 
-	gScore = 0.0
-	shuffled_data = shuffle.shuffle(X, popped_array[regression_y], 6, 0.33)
+	cumScore = 0.0
+	shuffled_data = shuffle.shuffle(X, popped_array[regression_y], 10, 0.33)
 	shuffles = len(shuffled_data["X"]["train"])
 	y_predict = list()
 	for  j in range(0, shuffles):
@@ -74,7 +74,7 @@ for i in range(1, 10):
 		X_test = preprocessing.scale(shuffled_data["X"]["test"][j])
 		y_train = preprocessing.scale(shuffled_data["y"]["train"][j])
 		y_test = preprocessing.scale(shuffled_data["y"]["test"][j])
-		knn = KNeighborsRegressor(n_neighbors=int(pow(i, 2.5))+1, weights='distance', algorithm='auto', leaf_size=30, p=i, metric='minkowski', n_jobs=-1)
+		knn = KNeighborsRegressor(n_neighbors=int(pow(i, 2))+1, weights='distance', algorithm='auto', leaf_size=30, p=i, metric='minkowski', n_jobs=-1)
 		knn.fit(X_train, y_train)
 		y_fit = knn.predict(X_test)
 		y_predict.append(y_fit)
@@ -83,15 +83,16 @@ for i in range(1, 10):
 		# plot_1.ylabel("y_fit")
 		# plot_1.plot(X_test, y_fit, '.')
 		# plot_1.show()
-		print("Shuffle: ", j, " for Target: ", regression_y, " -- Accuracy: ", knn.score(X_test, y_test))
+		# print("Shuffle: ", j, " for Target: ", regression_y, " -- Accuracy: ", knn.score(X_test, y_test))
 		score = knn.score(X_test, y_test)
-		gScore = gScore+score
+		cumScore = cumScore + score
 
-	print("Variance in predicted y: ", np.var(np.array(y_predict)))
-	gScore = gScore/shuffles
+	print("Shape of y_predict: ", np.shape(y_predict), ", of y_test: ", np.shape(y_test))
+	avgScore = cumScore / shuffles
 	dims.append(i)
-	scores.append(gScore)
-	print("->Average score for dim ",i, ": ", gScore)
+	scores.append(avgScore)
+	print("Variance in y_predict: ", np.mean(np.var(np.array(y_predict), axis=1)), ", Average score: ", avgScore)
+	print("Variance in y_predict: ", bv.variance(y_predict), ", bias: ", bv.bias(np.swapaxes(y_test, 0, 1), y_predict))
 	
 print("Optimum dimension: ", find_nearest(scores, 0.85*max(scores)))
 # plot_1.xlabel("components")
